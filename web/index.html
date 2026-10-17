@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="purple" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6750A4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DG-Control Hub · 郊狼多设备综合控制中台</title>
+<link rel="manifest" href="/api/manifest">
+<link rel="icon" href="/icon-192.png">
+<script src="/libs/tailwind.js"></script>
+<script src="/libs/vue.global.prod.js"></script>
+<script src="/libs/qrcode.min.js"></script>
+<style>
+/* ================= Material Design 3 令牌 ================= */
+[v-cloak]{display:none}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html[data-mode="light"]{
+  --bg:#FDF8FD; --surface-container-rgb:236,231,241; --surface-low-rgb:243,238,246;
+  --on-surface:#1C1B1F; --on-surface-variant:#49454F; --outline:#CAC4D0;
+  --error:#B3261E; --on-error:#fff; --success:#146C2E; --warn-text:#7A5900;
+  --warn-bg:rgba(255,236,179,.92); --shadow1:0 1px 3px rgba(0,0,0,.14); --shadow2:0 4px 20px rgba(0,0,0,.16)}
+html[data-mode="dark"]{
+  --bg:#121316; --surface-container-rgb:31,32,37; --surface-low-rgb:24,25,29;
+  --on-surface:#E5E1E6; --on-surface-variant:#C9C5D0; --outline:#49454F;
+  --error:#DC362E; --on-error:#fff; --success:#6DD58C; --warn-text:#FFD54F;
+  --warn-bg:rgba(74,61,0,.88); --shadow1:0 1px 3px rgba(0,0,0,.5); --shadow2:0 4px 20px rgba(0,0,0,.55)}
+html[data-theme="purple"][data-mode="light"]{--primary:#6750A4;--primary-container:#EADDFF;--on-primary:#fff;--on-primary-container:#21005D;--tertiary:#7D5260}
+html[data-theme="purple"][data-mode="dark"]{--primary:#D0BCFF;--primary-container:#4F378B;--on-primary:#381E72;--on-primary-container:#EADDFF;--tertiary:#EFB8C8}
+html[data-theme="ocean"][data-mode="light"]{--primary:#00639B;--primary-container:#C2E7FF;--on-primary:#fff;--on-primary-container:#004A77;--tertiary:#00696E}
+html[data-theme="ocean"][data-mode="dark"]{--primary:#8BCEFF;--primary-container:#004B71;--on-primary:#00344F;--on-primary-container:#C2E7FF;--tertiary:#4BDADB}
+html[data-theme="forest"][data-mode="light"]{--primary:#2E6A44;--primary-container:#C4EED0;--on-primary:#fff;--on-primary-container:#0A3818;--tertiary:#3C6472}
+html[data-theme="forest"][data-mode="dark"]{--primary:#7FD79B;--primary-container:#174E30;--on-primary:#0A3818;--on-primary-container:#C4EED0;--tertiary:#A4CFDB}
+html[data-theme="amber"][data-mode="light"]{--primary:#825500;--primary-container:#FFDDB3;--on-primary:#fff;--on-primary-container:#4B2800;--tertiary:#785900}
+html[data-theme="amber"][data-mode="dark"]{--primary:#FFB868;--primary-container:#663F00;--on-primary:#492900;--on-primary-container:#FFDDB3;--tertiary:#E8C26C}
+
+body{
+  font-family:"Roboto","Segoe UI Variable Text","Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--on-surface); min-height:100vh; background:var(--bg);
+  -webkit-tap-highlight-color:transparent; user-select:none;
+}
+#bg{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-color:var(--bg);transition:background .4s}
+#app{position:relative;z-index:1;max-width:1560px;margin:0 auto;padding:12px clamp(12px,3vw,28px) 118px}
+
+/* ================= 图标 ================= */
+.ic{width:22px;height:22px;fill:currentColor;flex:none;display:block}
+.ic.sm{width:18px;height:18px}
+.ic.lg{width:26px;height:26px}
+
+/* ================= Surface Container（毛玻璃） ================= */
+.card{
+  background:rgba(var(--surface-container-rgb),.82);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border:1px solid color-mix(in srgb, var(--outline) 42%, transparent);
+  border-radius:24px; box-shadow:var(--shadow1)}
+
+/* ================= Top App Bar ================= */
+.topbar{position:sticky;top:10px;z-index:40;padding:6px}
+.topbar-inner{
+  background:rgba(var(--surface-container-rgb),.78);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid color-mix(in srgb, var(--outline) 42%, transparent);
+  border-radius:28px; padding:10px 14px 10px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand-logo{
+  width:46px;height:46px;border-radius:16px;flex:none;
+  background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 55%,#000));
+  display:flex;align-items:center;justify-content:center;color:var(--on-primary);
+  box-shadow:0 4px 14px color-mix(in srgb,var(--primary) 45%,transparent)}
+.brand-name{font-weight:700;font-size:19px;letter-spacing:.2px}
+.brand-sub{font-size:11.5px;color:var(--on-surface-variant)}
+.chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;border:1.5px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip .ic{width:14px;height:14px}
+.chip.ok{background:color-mix(in srgb,var(--success) 16%,transparent);color:var(--success);border-color:color-mix(in srgb,var(--success) 45%,transparent)}
+.chip.lost{background:color-mix(in srgb,var(--error) 14%,transparent);color:var(--error);border-color:color-mix(in srgb,var(--error) 45%,transparent)}
+.chip.connecting{background:color-mix(in srgb,var(--warn-text) 14%,transparent);color:var(--warn-text)}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ================= 弹出菜单 ================= */
+.menu-wrap{position:relative}
+.menu{
+  position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:262px;
+  border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow2)}
+.menu-title{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--on-surface-variant)}
+.theme-dots{display:flex;gap:12px}
+.theme-dots button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:.15s;padding:0}
+.theme-dots button.active{border-color:var(--on-surface);transform:scale(1.12)}
+.wp-item{width:100%;justify-content:flex-start}
+
+/* ================= 按钮（M3 Common Buttons，48dp 热区） ================= */
+.btn{
+  min-height:48px;min-width:48px;padding:0 20px;border-radius:999px;border:none;cursor:pointer;
+  font-weight:600;font-size:14px;font-family:inherit;color:var(--on-surface);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .12s, box-shadow .2s, background .2s, filter .15s;white-space:nowrap;position:relative}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none;filter:none}
+.btn-filled{background:var(--primary);color:var(--on-primary);box-shadow:0 3px 12px color-mix(in srgb,var(--primary) 38%,transparent)}
+.btn-tonal{background:var(--primary-container);color:var(--on-primary-container)}
+.btn-outline{background:transparent;border:1.5px solid var(--outline);color:var(--on-surface)}
+.btn-outline.on{border-color:var(--primary);color:var(--primary);font-weight:700}
+.btn-text{background:transparent;color:var(--primary)}
+.btn-text.danger{color:var(--error)}
+.btn-kill{background:var(--error);color:var(--on-error);font-weight:700;letter-spacing:2px;box-shadow:0 4px 16px color-mix(in srgb,var(--error) 52%,transparent)}
+.btn-icon{padding:0;width:48px}
+.btn.sm{min-height:40px;padding:0 14px;font-size:13px}
+
+/* ================= 断线告警横幅 ================= */
+.warnbar{
+  margin:10px 4px 0;padding:11px 18px;border-radius:16px;font-weight:600;font-size:13.5px;
+  background:var(--warn-bg);color:var(--warn-text);
+  border:1px solid color-mix(in srgb,var(--warn-text) 35%,transparent);
+  display:flex;align-items:center;gap:10px}
+
+/* ================= 状态摘要栏 ================= */
+.summary{margin:14px 4px 0;padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.sum-item{flex:1;min-width:130px}
+.sum-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--on-surface-variant);margin-bottom:4px}
+.sum-val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all;display:flex;align-items:center;gap:8px}
+
+/* ================= 设备栅格 ================= */
+.device-grid{margin:16px 4px 0;display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:769px){.device-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1025px){.device-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.device-card{padding:20px;display:flex;flex-direction:column;gap:14px;transition:box-shadow .2s}
+.device-card:hover{box-shadow:var(--shadow2)}
+.auto-panel{grid-column:1/-1;padding:22px}
+.add-card{border-style:dashed;border-width:2px;padding:22px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.add-card .input{flex:none;min-height:48px}
+.add-title{font-weight:700;font-size:16px;color:var(--on-surface-variant);display:flex;align-items:center;gap:8px}
+
+.dev-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dev-title{display:flex;align-items:center;gap:6px;min-width:0}
+.dev-name{font-weight:700;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:var(--on-surface-variant);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none;transition:.15s;padding:0}
+.iconbtn:hover{background:color-mix(in srgb,var(--on-surface-variant) 14%,transparent);color:var(--on-surface)}
+.iconbtn.danger:hover{color:var(--error);background:color-mix(in srgb,var(--error) 12%,transparent)}
+.dev-id{font-size:11px;color:var(--on-surface-variant);margin-top:2px;word-break:break-all}
+.status-chip{font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;align-self:flex-start}
+.status-chip .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.status-chip.waiting{background:color-mix(in srgb,#F0A800 15%,transparent);color:#F0A800}
+.status-chip.online{background:color-mix(in srgb,var(--success) 15%,transparent);color:var(--success)}
+.status-chip.offline{background:color-mix(in srgb,#8A8A93 16%,transparent);color:#8A8A93}
+.dev-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ================= 双通道调控 ================= */
+.chan{border-radius:20px;padding:12px 16px;background:color-mix(in srgb,var(--outline) 13%,transparent)}
+.chan-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.chan-tag{font-size:12px;font-weight:700;padding:3px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.chan-tag.A{background:color-mix(in srgb,var(--primary) 22%,transparent);color:var(--primary)}
+.chan-tag.B{background:color-mix(in srgb,var(--tertiary) 24%,transparent);color:var(--tertiary)}
+.chan-val{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:36px;accent-color:var(--primary);cursor:pointer;margin:0}
+.steprow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.steprow button{
+  min-height:48px;border-radius:999px;border:none;cursor:pointer;font-size:15px;font-weight:700;
+  background:var(--primary-container);color:var(--on-primary-container);
+  transition:transform .1s,filter .15s;font-family:inherit;font-variant-numeric:tabular-nums}
+.steprow button:hover{filter:brightness(1.06)}
+.steprow button:active{transform:scale(.94)}
+.steprow button:disabled{opacity:.35;cursor:not-allowed}
+
+/* ================= 波形 ================= */
+.wavehead{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--on-surface-variant)}
+.waverow{display:flex;gap:8px;flex-wrap:wrap}
+.wavebtn{
+  min-height:48px;padding:0 16px;border-radius:999px;border:1.5px solid color-mix(in srgb,var(--primary) 55%,transparent);
+  background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);
+  font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit;transition:.15s;
+  display:inline-flex;align-items:center;gap:6px}
+.wavebtn:hover{background:color-mix(in srgb,var(--primary) 20%,transparent)}
+.wavebtn:active{transform:scale(.95)}
+.wavebtn:disabled{opacity:.35;cursor:not-allowed}
+.wavebtn.big{flex:1;min-width:104px}
+
+/* ================= 分段控件 / 复选框 ================= */
+.seg{display:inline-flex;border:1.5px solid var(--outline);border-radius:999px;overflow:hidden}
+.seg button{min-height:42px;padding:0 16px;background:transparent;border:none;color:var(--on-surface-variant);cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;transition:.15s}
+.seg button.on{background:var(--primary-container);color:var(--on-primary-container);font-weight:700}
+.check{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--on-surface-variant);user-select:none}
+.check .box{width:20px;height:20px;border-radius:6px;border:2px solid var(--outline);display:inline-flex;align-items:center;justify-content:center;transition:.15s;flex:none}
+.check.on .box{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.check .box .ic{width:14px;height:14px;opacity:0;transition:.15s}
+.check.on .box .ic{opacity:1}
+
+/* ================= 玩法面板 ================= */
+.auto-title{font-weight:700;font-size:17px;display:flex;align-items:center;gap:10px}
+.auto-grid{display:grid;gap:18px;grid-template-columns:1fr;margin-top:14px}
+@media (min-width:769px){.auto-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.auto-block{border-radius:20px;padding:16px;background:color-mix(in srgb,var(--outline) 13%,transparent);display:flex;flex-direction:column;gap:10px}
+.auto-sub{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.formrow{display:flex;align-items:center;gap:10px;font-size:13px}
+.formrow label{color:var(--on-surface-variant);flex:none}
+.formrow .unit{color:var(--on-surface-variant);flex:none}
+.input,select.input{
+  flex:1;min-width:0;min-height:44px;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;
+  background:color-mix(in srgb,var(--outline) 18%,transparent);color:var(--on-surface);
+  border:1.5px solid transparent;outline:none;transition:border-color .15s}
+.input:focus{border-color:var(--primary)}
+.auto-note{font-size:12px;color:var(--on-surface-variant);margin-top:14px;line-height:1.8;display:flex;gap:8px;align-items:flex-start}
+.running-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--error);
+  background:color-mix(in srgb,var(--error) 12%,transparent);padding:4px 12px;border-radius:999px;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ================= 事件日志 ================= */
+.logpanel{grid-column:1/-1;padding:20px 22px}
+.log-title{font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.loglist{max-height:216px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.loglist::-webkit-scrollbar{width:6px}
+.loglist::-webkit-scrollbar-thumb{background:var(--outline);border-radius:3px}
+.logitem{display:flex;gap:10px;align-items:baseline;font-size:12.5px;line-height:1.5;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--outline) 10%,transparent)}
+.logitem .t{color:var(--on-surface-variant);font-variant-numeric:tabular-nums;flex:none;font-size:11.5px}
+.logitem.error{color:var(--error)}
+.logitem.success{color:var(--success)}
+.logempty{color:var(--on-surface-variant);font-size:12.5px;padding:8px 2px}
+
+/* ================= 底部浮动控制条 ================= */
+.floating{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:45;display:flex;gap:10px;padding:10px 14px;border-radius:999px;align-items:center;
+  max-width:calc(100vw - 24px);overflow-x:auto;box-shadow:var(--shadow2)}
+@media (max-width:768px){.floating .wavebtn{display:none}}
+
+/* ================= 模态 ================= */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-card{border-radius:16px;padding:26px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;max-height:86vh;overflow-y:auto}
+.modal-title{font-weight:700;font-size:17px}
+.qrbox{background:#fff;padding:14px;border-radius:16px;line-height:0}
+.qrurl{font-size:11.5px;color:var(--on-surface-variant);word-break:break-all;line-height:1.6;user-select:text}
+.modal-hint{font-size:12px;color:var(--on-surface-variant);line-height:1.8}
+.shortcut-row{display:flex;justify-content:space-between;align-items:center;width:100%;font-size:13px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--outline) 12%,transparent)}
+kbd{font-family:inherit;background:color-mix(in srgb,var(--outline) 30%,transparent);border:1px solid var(--outline);border-radius:6px;padding:2px 10px;font-weight:700;font-size:12px}
+
+/* ================= Snackbar ================= */
+.toasts{position:fixed;top:76px;right:14px;z-index:100;display:flex;flex-direction:column;gap:8px;max-width:min(92vw,380px)}
+.toast{padding:12px 18px;border-radius:14px;font-size:13.5px;font-weight:500;border-left:4px solid var(--primary);
+  box-shadow:var(--shadow2);animation:slidein .25s ease;user-select:text;line-height:1.6}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--error)}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+
+/* ================= OOBE 首次运行向导 ================= */
+.oobe{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:18px}
+.oobe-card{border-radius:28px;padding:30px 34px;max-width:660px;width:100%;max-height:92vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:16px;text-align:left}
+.oobe-brand{display:flex;align-items:center;gap:16px}
+.oobe-title{font-weight:700;font-size:24px}
+.oobe-sub{color:var(--on-surface-variant);font-size:13px;margin-top:2px}
+.oobe-h{font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px}
+.oobe-steps{display:flex;gap:8px;justify-content:center}
+.oobe-steps span{width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--outline) 70%,transparent);transition:.2s}
+.oobe-steps span.on{background:var(--primary);transform:scale(1.25)}
+.oobe-nav{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap}
+.legal-box{max-height:44vh;overflow-y:auto;font-size:12.5px;line-height:1.95;color:var(--on-surface);
+  background:color-mix(in srgb,var(--outline) 10%,transparent);border-radius:14px;padding:16px 18px;
+  user-select:text;white-space:pre-wrap}
+.legal-box::-webkit-scrollbar{width:6px}
+.legal-box::-webkit-scrollbar-thumb{background:var(--outline);border-radius:3px}
+.kv{display:flex;gap:10px;align-items:center;font-size:13px;padding:8px 12px;border-radius:10px;
+  background:color-mix(in srgb,var(--outline) 12%,transparent)}
+.kv b{flex:none}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- Material Icons 精灵图（SVG Sprite） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66l.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14z"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></symbol>
+    <symbol id="i-add" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm12 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm-2-2h2v2h-2v-2zm2-2h2v2h-2v-2zm2-2h2v2h-2v-2zm-2-2h2v2h-2v-2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+    <symbol id="i-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+    <symbol id="i-casino" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9C15.67 9 15 8.33 15 7.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></symbol>
+    <symbol id="i-eq" viewBox="0 0 24 24"><path d="M7 18h2V6H7v12zm4 4h2V2h-2v20zm-8-8h2v-4H3v4zm12 4h2V6h-2v12zm4-8v4h2v-4h-2z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8H6v2h2V8zm0 3H6v2h2v-2zm-1 2H5v2h2v-2zm9 0h-2v2h2v-2zm2-2h-2v2h2v-2zm-2-3h-2v2h2V8zm2 0h-2v2h2V8zm2 3h-2v2h2v-2zm0-3h-2v2h2V8zm-7 7H8v2h8v-2zm2-2h2v2h-2v-2z"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></symbol>
+    <symbol id="i-dark" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/></symbol>
+    <symbol id="i-light" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.02.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0l1.06-1.06z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app" v-cloak>
+  <!-- ============ Top App Bar ============ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo"><svg class="ic lg"><use href="#i-bolt"/></svg></div>
+        <div class="min-w-0">
+          <div class="brand-name">DG-Control Hub</div>
+          <div class="brand-sub">郊狼多设备分布式综合控制中台 v1.1</div>
+        </div>
+        <span class="chip" :class="wsChipClass"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:currentColor"></span>{{ wsStateText }}</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline" @click="openPhoneQR"><svg class="ic sm"><use href="#i-phone"/></svg>手机端入口</button>
+
+        <div class="menu-wrap">
+          <button class="btn btn-icon btn-outline" title="外观设置" @click.stop="toggleMenus('theme')"><svg class="ic sm"><use href="#i-palette"/></svg></button>
+          <div v-if="showThemeMenu" class="menu card" @click.stop>
+            <div class="menu-title">主题色系</div>
+            <div class="theme-dots">
+              <button v-for="t in themes" :key="t.id" :title="t.name"
+                      :style="{background:t.color}" :class="{active: theme===t.id}"
+                      @click="setTheme(t.id)"></button>
+            </div>
+            <div class="menu-title">明暗模式</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline sm" :class="{on: mode==='light'}" @click="setMode('light')"><svg class="ic sm"><use href="#i-light"/></svg>浅色</button>
+              <button class="btn btn-outline sm" :class="{on: mode==='dark'}" @click="setMode('dark')"><svg class="ic sm"><use href="#i-dark"/></svg>深色</button>
+            </div>
+            <div class="menu-title">自定义背景引擎</div>
+            <button class="btn btn-tonal sm wp-item" @click="setWallpaper('m3')"><svg class="ic sm"><use href="#i-monitor"/></svg>原生 M3 纯色模式</button>
+            <button class="btn btn-tonal sm wp-item" @click="setWallpaper('bing')"><svg class="ic sm"><use href="#i-image"/></svg>必应每日高清壁纸</button>
+            <div style="display:flex;gap:6px">
+              <input class="input" style="min-height:40px" v-model="wpUrlInput" placeholder="粘贴图片 URL..." @keyup.enter="setWallpaper('url')">
+              <button class="btn btn-tonal sm" title="应用外链图片" @click="setWallpaper('url')"><svg class="ic sm"><use href="#i-link"/></svg></button>
+            </div>
+            <label class="btn btn-outline sm wp-item" style="cursor:pointer">
+              <svg class="ic sm"><use href="#i-upload"/></svg>上传本地图片（Base64 持久化）<input type="file" accept="image/*" hidden @change="onWallpaperFile">
+            </label>
+          </div>
+        </div>
+
+        <div class="menu-wrap">
+          <button class="btn btn-icon btn-outline" title="安全上限" @click.stop="toggleMenus('safe')"><svg class="ic sm"><use href="#i-shield"/></svg></button>
+          <div v-if="showSafeMenu" class="menu card" style="width:236px" @click.stop>
+            <div class="menu-title">安全上限（1 ~ 200）</div>
+            <div style="display:flex;gap:6px">
+              <input class="input" type="number" min="1" max="200" v-model.number="safeInput" style="min-height:40px">
+              <button class="btn btn-filled sm" @click="saveSafeLimit">保存</button>
+            </div>
+            <div class="modal-hint" style="text-align:left">双层安全架构：前端滑块与步进按钮被强制截断在该阈值内；服务端下发前执行 min(请求值, 上限) 硬封顶。收紧时在线设备的超出强度将被立即压回。</div>
+          </div>
+        </div>
+
+        <div class="menu-wrap">
+          <button class="btn btn-icon btn-outline" :class="{on: sync.tunnel.status==='ready'}"
+                  title="Cloudflare 公网隧道" @click.stop="tunnelOpen=!tunnelOpen"><svg class="ic sm"><use href="#i-globe"/></svg></button>
+          <div v-if="tunnelOpen" class="menu card" style="width:286px" @click.stop>
+            <div class="menu-title">Cloudflare Quick Tunnel 公网穿透</div>
+            <div style="font-size:13px;line-height:1.7">
+              <template v-if="sync.tunnel.status==='ready'">状态：<span style="color:var(--success);font-weight:700">已就绪</span>
+                <div class="qrurl" style="margin-top:6px">{{ sync.tunnel.url }}</div></template>
+              <template v-else-if="sync.tunnel.status==='starting'">状态：<span style="color:var(--warn-text);font-weight:700">建立中，请稍候…</span></template>
+              <template v-else>状态：<span style="color:var(--on-surface-variant)">未启用</span>
+                <div v-if="sync.tunnel.error" class="qrurl" style="color:var(--error);margin-top:6px">{{ sync.tunnel.error }}</div></template>
+            </div>
+            <button v-if="sync.tunnel.status==='off'" class="btn btn-filled sm" @click="tunnelToggle('start')"><svg class="ic sm"><use href="#i-globe"/></svg>启动公网隧道</button>
+            <button v-else-if="sync.tunnel.status==='ready'" class="btn btn-kill sm" @click="tunnelToggle('stop')"><svg class="ic sm"><use href="#i-stop"/></svg>关闭隧道</button>
+            <button v-else class="btn btn-outline sm" disabled>建立中…</button>
+            <button v-if="sync.tunnel.status==='ready'" class="btn btn-tonal sm" @click="copyText(sync.tunnel.url, '公网地址已复制')"><svg class="ic sm"><use href="#i-copy"/></svg>复制公网地址</button>
+            <div class="modal-hint" style="text-align:left">启用后手机与官方 App 无需处于同一局域网：控制台经 https、设备接入经 wss 隧道访问。首次使用自动下载 cloudflared（约 20MB）并缓存，域名每次启动随机分配。</div>
+          </div>
+        </div>
+
+        <button class="btn btn-icon btn-outline" title="用户协议与隐私政策" @click="openLegal()"><svg class="ic sm"><use href="#i-doc"/></svg></button>
+        <button class="btn btn-icon btn-outline" title="快捷键说明" @click="helpOpen=true"><svg class="ic sm"><use href="#i-keyboard"/></svg></button>
+        <button class="btn btn-kill" @click="killAll"><svg class="ic sm"><use href="#i-stop"/></svg>急停</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 断线黄灯告警 ============ -->
+  <div v-if="wsState!=='ok'" class="warnbar"><svg class="ic sm"><use href="#i-swap"/></svg>与中台服务的连接已中断，正在按指数退避（1s / 2s / 4s / 8s）自动重连，当前第 {{ retries }} 次。</div>
+
+  <!-- ============ 状态摘要栏 ============ -->
+  <section class="summary card">
+    <div class="sum-item"><div class="sum-label">局域网入口</div>
+      <div class="sum-val">{{ sync.server_ip }}:{{ sync.port }}</div></div>
+    <div class="sum-item"><div class="sum-label">在线设备</div>
+      <div class="sum-val">{{ onlineCount }} / {{ sync.devices.length }}</div></div>
+    <div class="sum-item"><div class="sum-label">安全上限</div>
+      <div class="sum-val">{{ sync.safe_max_limit }} / {{ sync.hard_limit }}</div></div>
+    <div class="sum-item"><div class="sum-label">管理端连接</div>
+      <div class="sum-val">{{ sync.admin_count || 1 }}</div></div>
+    <div class="sum-item"><div class="sum-label">进行中玩法</div>
+      <div class="sum-val">
+        <span v-if="activePlays" class="running-badge"><svg class="ic" style="width:13px;height:13px"><use href="#i-clock"/></svg>{{ activePlays }}</span>
+        <span v-else style="color:var(--on-surface-variant)">—</span>
+      </div></div>
+  </section>
+
+  <!-- ============ 设备卡槽网格 ============ -->
+  <main class="device-grid">
+    <section class="card device-card" v-for="d in sync.devices" :key="d.targetId"
+             :style="hitTarget===d.targetId ? 'border-color:var(--error);border-width:2px' : ''">
+      <div class="dev-head">
+        <div class="min-w-0" style="flex:1">
+          <div class="dev-title">
+            <template v-if="editingId===d.targetId">
+              <input class="input" style="min-height:38px;max-width:220px" v-model="editingName"
+                     @keyup.enter="saveName(d)" @blur="saveName(d)" v-focus>
+            </template>
+            <template v-else>
+              <span class="dev-name">{{ d.name }}</span>
+              <button class="iconbtn" title="重命名设备" @click="startEdit(d)"><svg class="ic sm"><use href="#i-edit"/></svg></button>
+            </template>
+          </div>
+          <div class="dev-id">{{ d.targetId }}<span v-if="d.clientId"> · {{ d.clientId }}</span></div>
+        </div>
+        <span class="status-chip" :class="d.status"><span class="dot"></span>{{ statusText(d.status) }}</span>
+      </div>
+      <div class="dev-actions">
+        <button class="btn btn-filled sm" @click="openQR(d)" :disabled="d.status==='online'"><svg class="ic sm"><use href="#i-qr"/></svg>接入二维码</button>
+        <button class="btn btn-outline sm" @click="clearDevice(d)" :disabled="d.status!=='online'"><svg class="ic sm"><use href="#i-restart"/></svg>清空复位</button>
+        <button class="iconbtn danger" title="移除卡槽" @click="removeSlot(d)"><svg class="ic sm"><use href="#i-delete"/></svg></button>
+      </div>
+
+      <div class="chan">
+        <div class="chan-head"><span class="chan-tag A"><svg class="ic" style="width:13px;height:13px"><use href="#i-eq"/></svg>A 通道</span><span class="chan-val">{{ d.channelA }}</span></div>
+        <input type="range" min="0" :max="cap" :value="d.channelA"
+               :disabled="d.status!=='online'" @input="onSlide(d,1,$event)" @change="commitSlide(d,1,$event)">
+        <div class="steprow">
+          <button :disabled="d.status!=='online'" @click="step(d,1,-5)">−5</button>
+          <button :disabled="d.status!=='online'" @click="step(d,1,-1)">−1</button>
+          <button :disabled="d.status!=='online'" @click="step(d,1,1)">+1</button>
+          <button :disabled="d.status!=='online'" @click="step(d,1,5)">+5</button>
+        </div>
+      </div>
+
+      <div class="chan">
+        <div class="chan-head"><span class="chan-tag B"><svg class="ic" style="width:13px;height:13px"><use href="#i-eq"/></svg>B 通道</span><span class="chan-val">{{ d.channelB }}</span></div>
+        <input type="range" min="0" :max="cap" :value="d.channelB"
+               :disabled="d.status!=='online'" @input="onSlide(d,2,$event)" @change="commitSlide(d,2,$event)">
+        <div class="steprow">
+          <button :disabled="d.status!=='online'" @click="step(d,2,-5)">−5</button>
+          <button :disabled="d.status!=='online'" @click="step(d,2,-1)">−1</button>
+          <button :disabled="d.status!=='online'" @click="step(d,2,1)">+1</button>
+          <button :disabled="d.status!=='online'" @click="step(d,2,5)">+5</button>
+        </div>
+      </div>
+
+      <div class="wavehead"><svg class="ic sm"><use href="#i-eq"/></svg>波形下发（{{ waveChannelText }} · {{ waveDuration/1000 }}s）</div>
+      <div class="waverow">
+        <button v-for="w in sync.waveforms" :key="w.id" class="wavebtn"
+                :title="w.desc" :disabled="d.status!=='online'"
+                @click="sendWave(d, w.id)">{{ w.label }}</button>
+      </div>
+    </section>
+
+    <!-- 添加设备卡槽 -->
+    <section class="card add-card">
+      <div class="add-title"><svg class="ic"><use href="#i-add"/></svg>添加设备卡槽</div>
+      <input class="input" v-model="newSlotName" placeholder="设备名称，如：01号设备-客厅" @keyup.enter="createSlot">
+      <button class="btn btn-filled" @click="createSlot"><svg class="ic sm"><use href="#i-qr"/></svg>生成卡槽并弹出接入二维码</button>
+      <div class="modal-hint" style="text-align:left">将生成符合官方 Hook 规则的带参二维码，App 扫码回复 200 确认后自动绑定上线。</div>
+    </section>
+
+    <!-- 自动化玩法引擎 -->
+    <section class="card auto-panel">
+      <div class="auto-title"><svg class="ic"><use href="#i-clock"/></svg>自动化玩法引擎</div>
+      <div class="auto-grid">
+        <div class="auto-block">
+          <div class="auto-sub"><svg class="ic sm"><use href="#i-casino"/></svg>轮盘随机抽奖</div>
+          <div class="formrow"><label>触发周期</label>
+            <input class="input" type="number" min="1" v-model.number="rouletteForm.interval_s"><span class="unit">秒</span></div>
+          <div class="formrow"><label>单次持续</label>
+            <input class="input" type="number" min="100" step="100" v-model.number="rouletteForm.duration_ms"><span class="unit">毫秒</span></div>
+          <div class="formrow"><label>目标强度</label>
+            <input class="input" type="number" min="0" :max="cap" v-model.number="rouletteForm.strength"></div>
+          <label class="check" :class="{on: rouletteForm.once}" @click="rouletteForm.once=!rouletteForm.once">
+            <span class="box"><svg class="ic"><use href="#i-check"/></svg></span>单次模式（命中一台后自动停止）
+          </label>
+          <button v-if="!sync.automation.roulette.running" class="btn btn-filled" @click="rouletteToggle"><svg class="ic sm"><use href="#i-casino"/></svg>启动轮盘</button>
+          <button v-else class="btn btn-kill" @click="rouletteToggle"><svg class="ic sm"><use href="#i-stop"/></svg>停止轮盘</button>
+        </div>
+
+        <div class="auto-block">
+          <div class="auto-sub"><svg class="ic sm"><use href="#i-trend"/></svg>渐进阶梯爬升</div>
+          <div class="formrow"><label>起始强度</label>
+            <input class="input" type="number" min="0" :max="cap" v-model.number="ladderForm.start"></div>
+          <div class="formrow"><label>终点强度</label>
+            <input class="input" type="number" min="0" :max="cap" v-model.number="ladderForm.end"></div>
+          <div class="formrow"><label>总时长</label>
+            <input class="input" type="number" min="4" v-model.number="ladderForm.duration_s"><span class="unit">秒</span></div>
+          <div class="formrow"><label>作用通道</label>
+            <select class="input" v-model="ladderForm.channel">
+              <option value="AB">A + B 双通道</option><option value="A">仅 A 通道</option><option value="B">仅 B 通道</option>
+            </select></div>
+          <button v-if="!sync.automation.ladder.running" class="btn btn-filled" @click="ladderToggle"><svg class="ic sm"><use href="#i-trend"/></svg>开始爬升</button>
+          <button v-else class="btn btn-kill" @click="ladderToggle"><svg class="ic sm"><use href="#i-stop"/></svg>终止爬升</button>
+        </div>
+
+        <div class="auto-block">
+          <div class="auto-sub"><svg class="ic sm"><use href="#i-eq"/></svg>全员波形下发</div>
+          <div class="formrow"><label>持续</label>
+            <select class="input" v-model.number="waveDuration">
+              <option :value="5000">5 秒</option><option :value="10000">10 秒</option>
+              <option :value="30000">30 秒</option><option :value="60000">60 秒</option>
+            </select></div>
+          <div class="formrow"><label>通道</label>
+            <div class="seg">
+              <button :class="{on: waveChannel==='A'}" @click="waveChannel='A'">A</button>
+              <button :class="{on: waveChannel==='B'}" @click="waveChannel='B'">B</button>
+              <button :class="{on: waveChannel==='AB'}" @click="waveChannel='AB'">A+B</button>
+            </div></div>
+          <div class="waverow" style="margin-top:2px">
+            <button v-for="w in sync.waveforms" :key="'all-'+w.id" class="wavebtn big"
+                    :title="w.desc" @click="sendWaveAll(w.id)">{{ w.label }}</button>
+          </div>
+          <div class="modal-hint">面向全部在线设备同步下发所选波形，协议采用流式缓冲模型持续补给波形数据。</div>
+        </div>
+      </div>
+      <div class="auto-note"><svg class="ic sm" style="color:var(--error)"><use href="#i-stop"/></svg>
+        <span>安全闭环：任意时刻点击顶栏「急停」、底部浮动条「全局急停」或按键盘 <kbd>Space</kbd>，将立即清空所有自动化任务，向全部在线设备广播 clear-1 / clear-2，并紧随下发双通道强度归零。</span></div>
+    </section>
+
+    <!-- 事件日志 -->
+    <section class="card logpanel">
+      <div class="log-title"><svg class="ic"><use href="#i-history"/></svg>事件日志<span style="font-size:12px;color:var(--on-surface-variant);font-weight:400">（最近 {{ logs.length }} 条）</span></div>
+      <div class="loglist">
+        <div v-if="!logs.length" class="logempty">暂无事件，设备接入 / 指令下发 / 玩法运行时将在此滚动记录。</div>
+        <div v-for="l in logs" :key="l.id" class="logitem" :class="l.level">
+          <span class="t">{{ l.time }}</span><span>{{ l.message }}</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 底部浮动控制条 ============ -->
+  <footer class="floating card">
+    <button class="btn btn-kill" @click="killAll"><svg class="ic sm"><use href="#i-stop"/></svg>全局急停</button>
+    <button class="btn btn-tonal" @click="clearAllWaves" title="向全部在线设备下发波形清空（强度保持不变）"><svg class="ic sm"><use href="#i-restart"/></svg>清波</button>
+    <button v-for="w in sync.waveforms" :key="'ft-'+w.id" class="wavebtn"
+            @click="sendWaveAll(w.id)">{{ w.label }}</button>
+  </footer>
+
+  <!-- ============ 设备接入二维码模态 ============ -->
+  <div class="modal" v-if="qrOpen" @click.self="qrOpen=false">
+    <div class="card modal-card">
+      <div class="modal-title">扫码接入 — {{ qrSlot && qrSlot.name }}</div>
+      <div class="qrbox" ref="qrbox"></div>
+      <div class="qrurl">{{ effQrUrl }}</div>
+      <button class="btn btn-tonal" @click="copyText(effQrUrl, '接入链接已复制')"><svg class="ic sm"><use href="#i-copy"/></svg>复制接入链接</button>
+      <label class="check" :class="{on: useTunnel}" :style="sync.tunnel.status==='ready' ? '' : 'opacity:.45'"
+             @click="toggleUseTunnel">
+        <span class="box"><svg class="ic"><use href="#i-check"/></svg></span>经公网隧道接入（外网可用，wss）
+      </label>
+      <div class="modal-hint">二维码遵循 DG-LAB V3 第三方 WS 协议（路径段为中台预分配的 clientId，App 连接后中台自动下发 targetId 并回复 200 完成绑定）。请打开 DG-LAB 官方 App 的「第三方控制 / 扫码连接」功能扫描，成功后卡槽自动转为绿色在线状态。{{ sync.tunnel.status==='ready' ? '' : '如需外网接入，请先在顶栏地球图标处启动公网隧道。' }}</div>
+      <button class="btn btn-text" @click="qrOpen=false"><svg class="ic sm"><use href="#i-close"/></svg>关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 手机端入口二维码模态 ============ -->
+  <div class="modal" v-if="phoneQrOpen" @click.self="phoneQrOpen=false">
+    <div class="card modal-card">
+      <div class="modal-title">手机控制端入口</div>
+      <div class="qrbox" ref="phoneqrbox"></div>
+      <div class="qrurl">{{ effPhoneUrl }}</div>
+      <button class="btn btn-tonal" @click="copyText(effPhoneUrl, '入口地址已复制')"><svg class="ic sm"><use href="#i-copy"/></svg>复制地址</button>
+      <label class="check" :class="{on: useTunnel}" :style="sync.tunnel.status==='ready' ? '' : 'opacity:.45'"
+             @click="toggleUseTunnel">
+        <span class="box"><svg class="ic"><use href="#i-check"/></svg></span>经公网隧道访问（外网可用，https）
+      </label>
+      <div class="modal-hint">默认二维码为局域网入口（手机与电脑须连接同一 Wi-Fi，若无法打开请在 Windows 防火墙放行 {{ sync.port }} 端口）；启动公网隧道并勾选上方选项后，扫码即可经 Cloudflare 隧道从任意网络访问。均可在浏览器菜单选择「添加到主屏幕」以全屏 PWA 形态运行。</div>
+      <button class="btn btn-text" @click="phoneQrOpen=false"><svg class="ic sm"><use href="#i-close"/></svg>关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 快捷键说明模态 ============ -->
+  <div class="modal" v-if="helpOpen" @click.self="helpOpen=false">
+    <div class="card modal-card">
+      <div class="modal-title">键盘快捷键</div>
+      <div class="shortcut-row"><span>全局紧急制动（Kill Switch）</span><kbd>Space</kbd></div>
+      <div class="shortcut-row"><span>关闭当前弹窗 / 菜单</span><kbd>Esc</kbd></div>
+      <div class="shortcut-row"><span>确认输入（新建卡槽 / 重命名）</span><kbd>Enter</kbd></div>
+      <div class="modal-hint">急停将清空全部玩法任务、广播波形清空并把所有通道强度归零，任何情况下优先保证受控安全。</div>
+      <div class="kv" style="text-align:left"><b>配置文件</b></div>
+      <div class="qrurl" style="margin-top:-8px">{{ sync.config_path }}（可直接用文本编辑器修改，含端口 / 安全上限 / 玩法默认值 / 隧道自启等；保存后重启程序生效）</div>
+      <div class="kv" style="text-align:left"><b>开源仓库</b></div>
+      <a class="btn btn-tonal" :href="sync.github_url" target="_blank" rel="noopener" style="text-decoration:none"><svg class="ic sm"><use href="#i-code"/></svg>{{ sync.github_url }}</a>
+      <button class="btn btn-text" @click="helpOpen=false"><svg class="ic sm"><use href="#i-close"/></svg>关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 用户协议与隐私政策模态 ============ -->
+  <div class="modal" v-if="legalOpen" @click.self="legalOpen=false">
+    <div class="card modal-card" style="max-width:560px">
+      <div class="modal-title">用户协议与隐私政策</div>
+      <div class="legal-box">{{ legalText }}</div>
+      <div class="modal-hint">本协议同样可在 GitHub 仓库查阅与提交修订建议：{{ sync.github_url }}</div>
+      <button class="btn btn-text" @click="legalOpen=false"><svg class="ic sm"><use href="#i-close"/></svg>关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ OOBE 首次运行向导 ============ -->
+  <div class="oobe" v-if="oobeShow">
+    <div class="card oobe-card">
+      <div class="oobe-steps">
+        <span v-for="n in 7" :key="'s'+n" :class="{on: oobeStep === n-1}"></span>
+      </div>
+
+      <!-- 步骤 0：欢迎 -->
+      <template v-if="oobeStep===0">
+        <div class="oobe-brand">
+          <div class="brand-logo"><svg class="ic lg"><use href="#i-bolt"/></svg></div>
+          <div>
+            <div class="oobe-title">欢迎使用 DG-Control Hub</div>
+            <div class="oobe-sub">郊狼多设备分布式综合控制中台 · v1.2 · 首次运行配置向导</div>
+          </div>
+        </div>
+        <div class="kv"><b>开源仓库</b><span style="user-select:text">{{ sync.github_url }}</span></div>
+        <div class="modal-hint" style="text-align:left">
+          本软件是一个部署在你自己电脑上的本地控制中台：桌面端与手机浏览器「双端同权」，通过 DG-LAB 官方 App 的第三方 WebSocket 接口桥接硬件，提供多设备监控、双通道精细调控、轮盘 / 阶梯 / 波形自动化玩法，以及可选的 Cloudflare 公网隧道远程访问。<br><br>
+          向导共 7 步（协议确认、安全、网络、上手、外观、完成），约需 1 分钟。你随时可以在顶栏重新查看协议与快捷键说明；所有个性化选项之后也可以在顶栏菜单中修改。
+        </div>
+        <div class="oobe-nav">
+          <a class="btn btn-tonal" :href="sync.github_url" target="_blank" rel="noopener" style="text-decoration:none"><svg class="ic sm"><use href="#i-code"/></svg>GitHub 仓库</a>
+          <button class="btn btn-filled" @click="oobeStep=1">开始配置<svg class="ic sm"><use href="#i-swap"/></svg></button>
+        </div>
+      </template>
+
+      <!-- 步骤 1：协议与隐私 -->
+      <template v-else-if="oobeStep===1">
+        <div class="oobe-h"><svg class="ic"><use href="#i-doc"/></svg>用户协议与隐私政策</div>
+        <div class="legal-box">{{ legalText }}</div>
+        <label class="check" :class="{on: agreeChecked}" @click="agreeChecked=!agreeChecked">
+          <span class="box"><svg class="ic"><use href="#i-check"/></svg></span>
+          我已完整阅读并理解上述全部内容，确认本人已年满 18 周岁，同意本协议并将安全、合规地使用本软件
+        </label>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=0">上一步</button>
+          <button class="btn btn-filled" :disabled="!agreeChecked" @click="oobeStep=2">同意并继续</button>
+        </div>
+      </template>
+
+      <!-- 步骤 2：安全设置 -->
+      <template v-else-if="oobeStep===2">
+        <div class="oobe-h"><svg class="ic"><use href="#i-shield"/></svg>安全设置（强烈建议保持默认）</div>
+        <div class="formrow"><label style="min-width:88px">安全上限</label>
+          <input class="input" type="number" min="1" max="200" v-model.number="safeInput"><span class="unit">/ 200</span></div>
+        <div class="modal-hint" style="text-align:left">
+          双层安全架构：前端滑块与步进按钮被强制截断在该阈值内；服务端在每次下发前统一执行 min(请求值, 安全上限) 硬封顶，无论报文来自桌面端、手机端还是自动化玩法引擎。收紧上限时，在线设备的超出强度会被立即压回。<br><br>
+          <b style="color:var(--error)">紧急制动：</b>顶栏红色「急停」按钮、底部浮动条「全局急停」或键盘 <kbd>Space</kbd> 空格键，任何时刻按下都会立即：清空全部自动化玩法任务 → 向所有在线设备广播 clear-1 / clear-2 → 双通道强度归零。<br><br>
+          官方 App 断线时，对应卡槽会自动置灰并将记录强度归零；用户也可随时在官方 App 本地直接调低或停止输出。
+        </div>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=1">上一步</button>
+          <button class="btn btn-filled" @click="saveSafeLimit(); oobeStep=3">保存并继续</button>
+        </div>
+      </template>
+
+      <!-- 步骤 3：网络 -->
+      <template v-else-if="oobeStep===3">
+        <div class="oobe-h"><svg class="ic"><use href="#i-globe"/></svg>网络与远程访问</div>
+        <div class="kv"><b>局域网入口</b><span style="user-select:text">{{ sync.server_ip }}:{{ sync.port }}</span></div>
+        <div class="modal-hint" style="text-align:left">
+          手机浏览器与官方 App 默认通过<b>局域网</b>访问（需连接同一 Wi-Fi，首个连接可能触发 Windows 防火墙放行提示，请允许）。
+          如果需要跨网络访问（例如不同 Wi-Fi、移动数据或远程场景），可以启用内置的 <b>Cloudflare Quick Tunnel</b>：无需注册与配置，一键获得公网 https 地址，手机与 App 均可经隧道接入；首次启用会自动下载 cloudflared（约 20MB），域名每次启动随机分配。
+        </div>
+        <label class="check" :class="{on: autoTunnel}" @click="autoTunnel=!autoTunnel">
+          <span class="box"><svg class="ic"><use href="#i-check"/></svg></span>每次启动自动建立公网隧道（写入 config.json，可随时关闭）
+        </label>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=2">上一步</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-text" @click="oobeStep=4">跳过</button>
+            <button class="btn btn-filled" @click="saveAutoTunnel(); oobeStep=4">保存并继续</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- 步骤 4：快速上手 -->
+      <template v-else-if="oobeStep===4">
+        <div class="oobe-h"><svg class="ic"><use href="#i-clock"/></svg>三步快速上手</div>
+        <div class="modal-hint" style="text-align:left">
+          <b>第一步 · 生成卡槽：</b>在设备网格中点击「＋ 添加设备卡槽」，输入名称后会自动弹出符合官方 Hook 规则的带参二维码。<br><br>
+          <b>第二步 · App 扫码：</b>打开 DG-LAB 官方 App 的「第三方控制 / 扫码连接」功能扫描二维码；App 按客户端 V3 协议连接 ws(s)://地址/clientId，中台自动下发 targetId 并回复 200，卡槽即转为绿色在线状态。<br><br>
+          <b>第三步 · 调控与玩法：</b>拖动 A / B 双通道滑块或使用 −5 −1 +1 +5 步进精细调控；「自动化玩法引擎」支持轮盘随机抽奖（可单次模式）、渐进阶梯爬升与呼吸 / 潮汐 / 连击 / 乱数四套波形的一键或全员下发；所有事件会记录在日志面板中。<br><br>
+          <b>多端同权：</b>手机扫码进入控制台后拥有与 PC 完全一致的操控能力，多台管理端同时在线实时同步；<kbd>Space</kbd> 空格键随时全局急停。
+        </div>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=3">上一步</button>
+          <button class="btn btn-filled" @click="oobeStep=5">继续</button>
+        </div>
+      </template>
+
+      <!-- 步骤 5：外观 -->
+      <template v-else-if="oobeStep===5">
+        <div class="oobe-h"><svg class="ic"><use href="#i-palette"/></svg>外观个性化</div>
+        <div class="menu-title">主题色系（Material Design 3）</div>
+        <div class="theme-dots">
+          <button v-for="t in themes" :key="'o'+t.id" :title="t.name" :style="{background:t.color}"
+                  :class="{active: theme===t.id}" @click="setTheme(t.id)"></button>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline sm" :class="{on: mode==='light'}" @click="setMode('light')"><svg class="ic sm"><use href="#i-light"/></svg>浅色</button>
+          <button class="btn btn-outline sm" :class="{on: mode==='dark'}" @click="setMode('dark')"><svg class="ic sm"><use href="#i-dark"/></svg>深色</button>
+        </div>
+        <div class="modal-hint" style="text-align:left">背景支持四种来源：M3 纯色、必应每日壁纸、外链图片与本地图片上传（Base64 持久化）。可随时在顶栏调色板菜单中更换，此处可跳过。</div>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=4">上一步</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-text" @click="oobeStep=6">跳过</button>
+            <button class="btn btn-filled" @click="oobeStep=6">完成外观设置</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- 步骤 6：完成 -->
+      <template v-else>
+        <div class="oobe-h"><svg class="ic" style="color:var(--success)"><use href="#i-check"/></svg>一切就绪</div>
+        <div class="modal-hint" style="text-align:left">
+          配置摘要：<br>
+          · 安全上限：{{ safeInput }} / 200（双层封顶 + 全局急停 + 断线归零三重保护）<br>
+          · 局域网入口：{{ sync.server_ip }}:{{ sync.port }}{{ autoTunnel ? '（公网隧道将随程序自动建立）' : '' }}<br>
+          · 配置文件：{{ sync.config_path || 'config.json' }}（可用任意文本编辑器直接修改）<br>
+          · 开源仓库：{{ sync.github_url }}<br><br>
+          点击下方按钮完成初始化。如需重新查看协议，请点击顶栏文档图标；祝使用愉快，请始终把安全放在第一位。
+        </div>
+        <div class="oobe-nav">
+          <button class="btn btn-text" @click="oobeStep=5">上一步</button>
+          <button class="btn btn-filled" @click="finishOobe"><svg class="ic sm"><use href="#i-bolt"/></svg>进入控制台</button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- ============ Snackbar ============ -->
+  <div class="toasts">
+    <div v-for="t in toasts" :key="t.id" class="toast card" :class="t.level">{{ t.message }}</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // V3 官方 App 解析二维码时的固定锚点（必须精确包含 .php，否则部分版本 App 判定非法二维码）
+  var QR_PREFIX = "https://www.dungeon-lab.com/app-download.php#DGLAB-SOCKET#";
+  var LEGAL_TEXT = ["【软件性质与非官方声明】",
+"DG-Control Hub（下称“本软件”）是一个由社区独立开发的开源第三方工具，仓库地址：https://github.com/chenofchina/DG-Control-Hub 。本软件与 DG-LAB（郊狼 / Dungeon Lab）官方没有任何隶属、合作、授权或背书关系，不是 DG-LAB 官方应用，也不是官方 App 的替代品。本软件仅通过 DG-LAB 官方 App 公开的第三方 WebSocket 接口规范进行桥接通信；“DG-LAB”“郊狼”及相关商标归其权利人所有。如需官方产品与服务，请始终以 DG-LAB 官方渠道为准。使用本软件造成的任何后果由使用者自行承担，与 DG-LAB 官方无关。",
+"",
+"【开源与许可】",
+"本软件源代码公开于上述 GitHub 仓库，供学习、研究与个人使用；具体开源许可证以仓库内 LICENSE 文件为准。欢迎通过 Issue 与 Pull Request 反馈问题、贡献代码。禁止将本软件用于任何违法违规用途，或去除、遮蔽本声明后二次分发。",
+"",
+"【隐私政策】",
+"1. 本软件完全本地运行：设备会话、强度记录、事件日志与个性化偏好均保存在你自己的电脑与浏览器 localStorage 中，开发者不收集、不上传、不分析任何用户数据，软件中没有任何遥测或统计代码。",
+"2. 本地配置保存在主程序同目录的 config.json，可随时用文本编辑器查看与修改或直接删除。",
+"3. 当且仅当你主动启用 Cloudflare Quick Tunnel 时，管理端与官方 App 之间的通信才会经由 Cloudflare 的隧道网络中转；该情况下流量会经过 Cloudflare 边缘节点，请自行评估其适用性。未启用隧道时，所有通信仅在你的局域网内进行。",
+"4. 请勿将本软件用于窥探、骚扰或任何侵犯他人隐私与人格权的场景。",
+"",
+"【安全与医疗警告】",
+"1. 电刺激设备存在固有风险。以下人群禁止使用：佩戴心脏起搏器等植入式电子医疗设备者、心律失常或心脑血管疾病患者、癫痫患者、孕妇、皮肤破损或感觉障碍部位使用者，以及未成年人。",
+"2. 请勿在头部、颈部、胸前（心脏投影区）等危险区域贴片使用；首次使用请从最低强度开始，循序渐进。",
+"3. 使用本软件操控他人设备前，必须事先获得对方的明确、知情、可随时撤回的同意；受控方应保留随时在官方 App 本地降低或停止输出的能力，并牢记急停机制。禁止在对方睡眠、醉酒、意识不清或无法表达意愿的状态下进行任何操控。",
+"4. 长时间、高强度使用可能造成皮肤损伤或肌肉疲劳，请注意休息与观察。",
+"",
+"【使用条款与免责声明】",
+"1. 本软件按“现状”提供，不附带任何明示或默示的担保。在适用法律允许的最大范围内，开发者不对因使用或无法使用本软件导致的任何直接或间接损失承担责任。",
+"2. 你需确保在使用本软件时遵守所在地的法律法规。因违规使用造成的一切后果由使用者自行承担。",
+"3. 如你不同意本协议的任何内容，请立即停止使用并删除本软件。本协议自你点击“同意”或实际使用本软件时生效。",
+"4. 本协议的更新将随软件版本发布于上述 GitHub 仓库，继续使用即视为接受更新后的条款。"
+  ].join("\n");
+  var LS = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  };
+
+  var app = Vue.createApp({
+    data: function () {
+      return {
+        sync: {
+          server_ip: "", port: 0, safe_max_limit: 50, hard_limit: 200, admin_count: 1,
+          tunnel: { status: "off", url: "", error: "" },
+          github_url: "https://github.com/chenofchina/DG-Control-Hub",
+          config_path: "config.json",
+          oobe: { completed: false, agree_license: false },
+          auto_tunnel: false,
+          waveforms: [], automation: { roulette: { running: false }, ladder: { running: false } },
+          devices: []
+        },
+        ws: null, wsState: "init", retries: 0, backoff: 1000,
+        theme: LS.get("dg.theme", "purple"),
+        mode: LS.get("dg.mode", "dark"),
+        wallpaper: JSON.parse(LS.get("dg.wp", '{"type":"m3"}')),
+        wpUrlInput: "",
+        showThemeMenu: false, showSafeMenu: false, safeInput: 50,
+        helpOpen: false, qrOpen: false, qrSlot: null, phoneQrOpen: false,
+        tunnelOpen: false, useTunnel: false,
+        legalOpen: false, oobeStep: 0, agreeChecked: false, autoTunnel: false, _cfgInit: false,
+        legalText: LEGAL_TEXT,
+        newSlotName: "", _knownStatus: {},
+        editingId: "", editingName: "",
+        rouletteForm: { interval_s: 15, duration_ms: 2000, strength: 40, once: false },
+        ladderForm: { start: 0, end: 50, duration_s: 300, channel: "AB" },
+        waveChannel: "AB", waveDuration: 10000,
+        hitTarget: "", _hitTimer: null,
+        logs: [], _logSeq: 0,
+        toasts: [], _toastSeq: 0
+      };
+    },
+    computed: {
+      cap: function () {
+        return Math.min(this.sync.safe_max_limit || 50, this.sync.hard_limit || 200);
+      },
+      onlineCount: function () {
+        return this.sync.devices.filter(function (d) { return d.status === "online"; }).length;
+      },
+      activePlays: function () {
+        var n = [];
+        if (this.sync.automation.roulette.running) n.push("轮盘");
+        if (this.sync.automation.ladder.running) n.push("阶梯");
+        return n.join(" + ");
+      },
+      wsChipClass: function () {
+        return this.wsState === "ok" ? "ok" : this.wsState === "connecting" ? "connecting" : "lost";
+      },
+      wsStateText: function () {
+        return this.wsState === "ok" ? "服务已连接" : this.wsState === "connecting" ? "连接中" : "连接中断";
+      },
+      phoneUrl: function () {
+        return "http://" + this.sync.server_ip + ":" + this.sync.port + "/";
+      },
+      oobeShow: function () {
+        return !(this.sync.oobe && this.sync.oobe.completed);
+      },
+      effPhoneUrl: function () {
+        var t = this.sync.tunnel;
+        return (this.useTunnel && t && t.status === "ready" && t.url) ? t.url : this.phoneUrl;
+      },
+      effQrUrl: function () {
+        if (!this.qrSlot) return "";
+        // V3 官方 App 时序：路径段为服务端预分配的 clientId，
+        // App 连接后由中台下发 targetId，App 回发 bind、中台回复 200 完成绑定
+        var t = this.sync.tunnel;
+        var base;
+        if (this.useTunnel && t && t.status === "ready" && t.url) {
+          base = t.url.replace(/^https:\/\//, "wss://");
+        } else {
+          base = "ws://" + this.sync.server_ip + ":" + this.sync.port;
+        }
+        // 官方 App 对锚点后的 WS 地址做字符串精确匹配（wss:// 原样），切勿 URL 编码
+        return QR_PREFIX + base + "/" + (this.qrSlot.clientId || ("dglab/ws/" + this.qrSlot.targetId));
+      },
+      waveChannelText: function () {
+        return { A: "A 通道", B: "B 通道", AB: "A+B 双通道" }[this.waveChannel];
+      },
+      themes: function () {
+        return [
+          { id: "purple", name: "极光紫", color: "#6750A4" },
+          { id: "ocean", name: "海洋蓝", color: "#00639B" },
+          { id: "forest", name: "森林绿", color: "#2E6A44" },
+          { id: "amber", name: "日落金", color: "#825500" }
+        ];
+      }
+    },
+    watch: {
+    useTunnel: function () {
+      if (this.qrOpen) this.renderDeviceQR();
+      if (this.phoneQrOpen) this.renderPhoneQR();
+    }
+  },
+  methods: {
+      // ============ WebSocket（指数退避重连） ============
+      connect: function () {
+        var self = this;
+        if (self.ws) { try { self.ws.onclose = null; self.ws.close(); } catch (e) {} }
+        var proto = location.protocol === "https:" ? "wss" : "ws";
+        var ws = new WebSocket(proto + "://" + location.host + "/ws/admin");
+        self.ws = ws;
+        self.wsState = "connecting";
+        ws.onopen = function () {
+          if (self.wsState === "lost") self.log("管理端连接已恢复", "success");
+          self.wsState = "ok"; self.retries = 0; self.backoff = 1000;
+        };
+        ws.onmessage = function (ev) {
+          var d;
+          try { d = JSON.parse(ev.data); } catch (e) { return; }
+          if (d.type === "sync") self.onSync(d);
+          else if (d.type === "toast") { self.toast(d.message, d.level); self.log(d.message, d.level); }
+        };
+        ws.onclose = function () {
+          self.wsState = "lost";
+          self.retries++;
+          setTimeout(function () { self.connect(); }, self.backoff);
+          self.backoff = Math.min(self.backoff * 2, 8000);
+        };
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+      },
+      send: function (obj) {
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(JSON.stringify(obj));
+          return true;
+        }
+        this.toast("服务未连接，指令未发送", "error");
+        return false;
+      },
+      onSync: function (d) {
+        var self = this;
+        if (!self._cfgInit) { self._cfgInit = true; self.autoTunnel = !!d.auto_tunnel; }
+        d.devices.forEach(function (dev) {
+          var prev = self._knownStatus[dev.targetId];
+          if (prev && prev !== "online" && dev.status === "online") self.log(dev.name + " 已上线", "success");
+          if (prev && prev === "online" && dev.status !== "online") self.log(dev.name + " 已离线，强度归零", "error");
+          self._knownStatus[dev.targetId] = dev.status;
+        });
+        this.sync = d;
+      },
+      log: function (message, level) {
+        var self = this;
+        self.logs.unshift({ id: ++self._logSeq, time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), message: message, level: level || "info" });
+        if (self.logs.length > 50) self.logs.length = 50;
+      },
+
+      // ============ 通用 ============
+      toast: function (msg, level) {
+        var self = this;
+        var id = ++self._toastSeq;
+        self.toasts.push({ id: id, message: msg, level: level || "info" });
+        setTimeout(function () {
+          self.toasts = self.toasts.filter(function (t) { return t.id !== id; });
+        }, 3600);
+      },
+      toggleMenus: function (which) {
+        if (which === "theme") { this.showThemeMenu = !this.showThemeMenu; this.showSafeMenu = false; }
+        else { this.showSafeMenu = !this.showSafeMenu; this.showThemeMenu = false; this.safeInput = this.sync.safe_max_limit; }
+      },
+      statusText: function (s) {
+        return { waiting: "待接入", online: "在线受控", offline: "已离线" }[s] || s;
+      },
+      copyText: function (text, tip) {
+        var self = this;
+        var fallback = function () {
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); self.toast(tip || "已复制", "success"); }
+          catch (e) { self.toast("复制失败，请手动复制", "error"); }
+          document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text)
+            .then(function () { self.toast(tip || "已复制", "success"); })
+            .catch(fallback);
+        } else fallback();
+      },
+
+      // ============ OOBE / 协议 ============
+      openLegal: function () {
+        this.legalOpen = true;
+        this.agreeChecked = !!this.sync.oobe.agree_license;
+      },
+      saveAutoTunnel: function () {
+        this.send({ action: "save_config", patch: { tunnel_auto_start: this.autoTunnel } });
+      },
+      finishOobe: function () {
+        this.safeInput = Math.max(1, Math.min(200, parseInt(this.safeInput, 10) || 50));
+        this.send({ action: "set_config", safe_max_limit: this.safeInput });
+        this.send({ action: "save_config", patch: { tunnel_auto_start: this.autoTunnel } });
+        this.send({ action: "oobe_complete" });
+        this.toast("初始化完成，欢迎使用", "success");
+      },
+
+      // ============ 卡槽管理 ============
+      createSlot: function () {
+        if (!this.send({ action: "create_slot", name: this.newSlotName })) return;
+        this.newSlotName = "";
+      },
+      removeSlot: function (d) {
+        if (!confirm("确认移除卡槽「" + d.name + "」？")) return;
+        this.send({ action: "remove_slot", targetId: d.targetId });
+        delete this._knownStatus[d.targetId];
+        this.log("已移除卡槽 " + d.name, "info");
+      },
+      startEdit: function (d) {
+        this.editingId = d.targetId;
+        this.editingName = d.name;
+      },
+      saveName: function (d) {
+        if (this.editingId !== d.targetId) return;
+        var name = (this.editingName || "").trim();
+        this.editingId = "";
+        if (name && name !== d.name) {
+          this.send({ action: "rename_slot", targetId: d.targetId, name: name });
+        }
+      },
+      openQR: function (d) {
+        this.qrSlot = d;
+        this.qrOpen = true;
+        this.renderDeviceQR();
+      },
+      renderDeviceQR: function () {
+        var self = this;
+        self.$nextTick(function () {
+          var el = self.$refs.qrbox;
+          if (!el) return;
+          if (self.effQrUrl.indexOf(QR_PREFIX) !== 0) {
+            self.toast("二维码前缀异常，已阻止渲染（应为 app-download.php 锚点）", "error");
+            return;
+          }
+          el.innerHTML = "";
+          try { new QRCode(el, { text: self.effQrUrl, width: 232, height: 232, correctLevel: QRCode.CorrectLevel.M }); }
+          catch (e) { self.toast("二维码渲染失败：" + e, "error"); }
+        });
+      },
+      openPhoneQR: function () {
+        this.phoneQrOpen = true;
+        this.renderPhoneQR();
+      },
+      renderPhoneQR: function () {
+        var self = this;
+        self.$nextTick(function () {
+          var el = self.$refs.phoneqrbox;
+          if (!el) return;
+          el.innerHTML = "";
+          try { new QRCode(el, { text: self.effPhoneUrl, width: 232, height: 232, correctLevel: QRCode.CorrectLevel.M }); }
+          catch (e) { self.toast("二维码渲染失败：" + e, "error"); }
+        });
+      },
+      toggleUseTunnel: function () {
+        if (this.sync.tunnel.status !== "ready") {
+          this.toast("公网隧道未就绪，请先在顶栏地球图标处启动", "error");
+          return;
+        }
+        this.useTunnel = !this.useTunnel;
+      },
+      tunnelToggle: function (op) {
+        this.send({ action: "tunnel", op: op });
+      },
+
+      // ============ 强度调控 ============
+      chanKey: function (ch) { return ch === 1 ? "channelA" : "channelB"; },
+      onSlide: function (d, ch, ev) {
+        // 拖动中实时刷新数值显示（不发送报文）
+        d[this.chanKey(ch)] = parseInt(ev.target.value, 10) || 0;
+      },
+      commitSlide: function (d, ch, ev) {
+        var val = parseInt(ev.target.value, 10) || 0;
+        d[this.chanKey(ch)] = val;
+        this.send({ action: "strength", targetId: d.targetId, channel: ch, mode: 0, val: val });
+        this.log(d.name + " 通道" + (ch === 1 ? "A" : "B") + " 绝对赋值 " + val, "info");
+      },
+      step: function (d, ch, delta) {
+        var key = this.chanKey(ch);
+        var next = Math.max(0, Math.min(this.cap, d[key] + delta));
+        if (next === d[key]) return;
+        d[key] = next;
+        this.send({ action: "strength", targetId: d.targetId, channel: ch,
+                    mode: delta > 0 ? 1 : 2, val: Math.abs(delta) });
+      },
+      clearDevice: function (d) {
+        this.send({ action: "clear", targetId: d.targetId });
+        this.log(d.name + " 已执行清空复位", "info");
+      },
+      killAll: function () {
+        var self = this;
+        self.send({ action: "kill_all" });
+        self.sync.devices.forEach(function (d) { d.channelA = 0; d.channelB = 0; });
+        self.log("已触发全局急停：全部玩法清空，通道归零", "error");
+      },
+      clearAllWaves: function () {
+        this.send({ action: "clear_all" });
+      },
+      saveSafeLimit: function () {
+        var v = Math.max(1, Math.min(200, parseInt(this.safeInput, 10) || 50));
+        this.send({ action: "set_config", safe_max_limit: v });
+        this.showSafeMenu = false;
+      },
+
+      // ============ 玩法引擎 ============
+      rouletteToggle: function () {
+        if (this.sync.automation.roulette.running) {
+          this.send({ action: "roulette", op: "stop" });
+        } else {
+          this.send(Object.assign({ action: "roulette", op: "start" }, this.rouletteForm));
+        }
+      },
+      ladderToggle: function () {
+        if (this.sync.automation.ladder.running) {
+          this.send({ action: "ladder", op: "stop" });
+        } else {
+          this.send(Object.assign({ action: "ladder", op: "start" }, this.ladderForm));
+        }
+      },
+      sendWave: function (d, wave) {
+        var self = this;
+        this.send({ action: "waveform", targetId: d.targetId, wave: wave,
+                    duration_ms: this.waveDuration, channel: this.waveChannel });
+        // 命中视觉反馈
+        self.hitTarget = d.targetId;
+        if (self._hitTimer) clearTimeout(self._hitTimer);
+        self._hitTimer = setTimeout(function () { self.hitTarget = ""; }, 1200);
+      },
+      sendWaveAll: function (wave) {
+        this.send({ action: "waveform", targetId: null, wave: wave,
+                    duration_ms: this.waveDuration, channel: this.waveChannel });
+      },
+
+      // ============ 主题 / 壁纸 ============
+      setTheme: function (t) { this.theme = t; LS.set("dg.theme", t); this.applyTheme(); },
+      setMode: function (m) { this.mode = m; LS.set("dg.mode", m); this.applyTheme(); this.applyWallpaper(); },
+      applyTheme: function () {
+        var html = document.documentElement;
+        html.setAttribute("data-theme", this.theme);
+        html.setAttribute("data-mode", this.mode);
+      },
+      setWallpaper: function (type) {
+        var self = this;
+        if (type === "m3") {
+          self.wallpaper = { type: "m3" };
+        } else if (type === "bing") {
+          self.wallpaper = { type: "bing", url: "", date: "" };
+          self.loadBing();
+        } else if (type === "url") {
+          if (!self.wpUrlInput) { self.toast("请先粘贴图片 URL", "error"); return; }
+          self.wallpaper = { type: "url", url: self.wpUrlInput };
+        }
+        self.showThemeMenu = false;
+        LS.set("dg.wp", JSON.stringify(self.wallpaper));
+        self.applyWallpaper();
+      },
+      onWallpaperFile: function (ev) {
+        var self = this;
+        var f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var dataUrl = e.target.result;
+          self.wallpaper = { type: "file", data: dataUrl };
+          if (!LS.set("dg.wp", JSON.stringify(self.wallpaper))) {
+            self.toast("图片较大，无法持久化保存（本次会话内仍然生效）", "error");
+          }
+          self.applyWallpaper();
+          self.showThemeMenu = false;
+        };
+        reader.readAsDataURL(f);
+        ev.target.value = "";
+      },
+      loadBing: function () {
+        var self = this;
+        var today = new Date().toISOString().slice(0, 10);
+        if (self.wallpaper.url && self.wallpaper.date === today) { self.applyWallpaper(); return; }
+        fetch("/api/bing").then(function (r) { return r.json(); }).then(function (j) {
+          if (j.url) {
+            self.wallpaper.url = j.url; self.wallpaper.date = today;
+            LS.set("dg.wp", JSON.stringify(self.wallpaper));
+            self.applyWallpaper();
+          } else self.toast("必应壁纸获取失败，请检查网络", "error");
+        }).catch(function () { self.toast("必应壁纸获取失败，请检查网络", "error"); });
+      },
+      applyWallpaper: function () {
+        var bg = document.getElementById("bg");
+        var wp = this.wallpaper || { type: "m3" };
+        var img = "";
+        if (wp.type === "bing") {
+          if (wp.url) img = "url('" + wp.url + "')";
+          else this.loadBing();
+        } else if (wp.type === "url") {
+          img = "url('" + wp.url + "')";
+        } else if (wp.type === "file") {
+          img = "url('" + wp.data + "')";
+        }
+        bg.style.backgroundImage = img;
+      }
+    },
+    directives: {
+      focus: { mounted: function (el) { el.focus(); el.select(); } }
+    },
+    mounted: function () {
+      var self = this;
+      self.applyTheme();
+      self.applyWallpaper();
+      self.connect();
+      // 桌面端空格键 -> 全局急停（PRD FR-05）
+      window.addEventListener("keydown", function (e) {
+        if (e.code === "Space" && !["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName)) {
+          e.preventDefault();
+          self.killAll();
+        }
+        if (e.key === "Escape") {
+          self.qrOpen = false; self.phoneQrOpen = false; self.helpOpen = false; self.legalOpen = false;
+          self.showThemeMenu = false; self.showSafeMenu = false; self.tunnelOpen = false;
+        }
+      });
+      document.addEventListener("click", function () {
+        self.showThemeMenu = false; self.showSafeMenu = false; self.tunnelOpen = false;
+      });
+    }
+  });
+  app.mount("#app");
+})();
+</script>
+</body>
+</html>

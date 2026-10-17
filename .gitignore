@@ -1,0 +1,7 @@
+# 忽略构建产物与本地运行数据
+__pycache__/
+build/
+dist/
+*.spec
+app.log
+config.json
